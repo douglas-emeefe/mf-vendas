@@ -24,9 +24,11 @@ model Produto {
 }
 
 model Cliente {
-  id    Int     @id @default(autoincrement())
-  nome  String
-  email String?
+  id       Int     @id @default(autoincrement())
+  nome     String
+  email    String  @unique
+  telefone String?
+  cpf      String?
 }
 
 model Venda {
