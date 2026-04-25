@@ -1,0 +1,340 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { api } from "../services/api";
+
+export default function PDV() {
+    const [produtos, setProdutos] = useState([]);
+    const [clientes, setClientes] = useState([]);
+    const [busca, setBusca] = useState("");
+    const [carrinho, setCarrinho] = useState([]);
+    const [tipoVenda, setTipoVenda] = useState("avista");
+    const [clienteId, setClienteId] = useState("");
+    const [mostrarFiados, setMostrarFiados] = useState(false);
+    const [fiados, setFiados] = useState([]);
+
+    async function carregarDados() {
+        const produtosResponse = await api.get("/produtos");
+        const clientesResponse = await api.get("/clientes");
+
+        setProdutos(produtosResponse.data);
+        setClientes(clientesResponse.data);
+    }
+
+    useEffect(() => {
+        carregarDados();
+    }, []);
+
+    const produtosFiltrados = useMemo(() => {
+        if (!busca) return [];
+
+        return produtos.filter((produto) => {
+            const termo = busca.toLowerCase();
+
+            return (
+                produto.nome?.toLowerCase().includes(termo) ||
+                String(produto.id).includes(termo) ||
+                String(produto.codigoBarras || "").includes(termo)
+            );
+        });
+    }, [busca, produtos]);
+
+    function adicionarProduto(produto) {
+        const produtoNoCarrinho = carrinho.find((item) => item.id === produto.id);
+
+        if (produtoNoCarrinho) {
+            setCarrinho(
+                carrinho.map((item) =>
+                    item.id === produto.id
+                        ? { ...item, quantidade: item.quantidade + 1 }
+                        : item
+                )
+            );
+        } else {
+            setCarrinho([
+                ...carrinho,
+                {
+                    ...produto,
+                    quantidade: 1,
+                },
+            ]);
+        }
+
+        setBusca("");
+    }
+
+    function removerProduto(id) {
+        setCarrinho(carrinho.filter((item) => item.id !== id));
+    }
+
+    function alterarQuantidade(id, quantidade) {
+        if (quantidade <= 0) return removerProduto(id);
+
+        setCarrinho(
+            carrinho.map((item) =>
+                item.id === id ? { ...item, quantidade: quantidade } : item
+            )
+        );
+    }
+
+    const total = carrinho.reduce(
+        (acc, item) => acc + Number(item.preco) * item.quantidade,
+        0
+    );
+
+    function finalizarVenda() {
+        if (carrinho.length === 0) {
+            alert("Adicione produtos ao carrinho.");
+            return;
+        }
+
+        if (tipoVenda === "fiado" && !clienteId) {
+            alert("Selecione um cliente para venda fiado.");
+            return;
+        }
+
+        if (tipoVenda === "fiado") {
+            const cliente = clientes.find((c) => c.id === Number(clienteId));
+
+            const novoFiado = {
+                id: Date.now(),
+                cliente: cliente.nome,
+                total,
+                itens: carrinho,
+                data: new Date().toLocaleDateString("pt-BR"),
+            };
+
+            setFiados([...fiados, novoFiado]);
+            alert("Venda registrada como fiado.");
+        } else {
+            alert("Venda finalizada com sucesso.");
+        }
+
+        setCarrinho([]);
+        setClienteId("");
+        setTipoVenda("avista");
+    }
+
+    return (
+        <div className="min-h-screen bg-slate-100 p-6">
+            <header className="flex items-center justify-between mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900">
+                        PDV - Ponto de Venda
+                    </h1>
+                    <p className="text-slate-500">Venda rápida, à vista ou fiado</p>
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setMostrarFiados(true)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-3 rounded-xl"
+                    >
+                        Fiados
+                    </button>
+
+                    <Link
+                        to="/"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-3 rounded-xl"
+                    >
+                        🏠 Início
+                    </Link>
+                </div>
+            </header>
+
+            <main className="grid grid-cols-[1fr_380px] gap-6">
+                <section className="bg-white border border-gray-200 rounded-xl p-6 min-h-[650px]">
+                    <h2 className="text-xl font-semibold mb-4">Itens da Venda</h2>
+
+                    {carrinho.length === 0 ? (
+                        <div className="h-[420px] flex items-center justify-center text-slate-400">
+                            Nenhum produto adicionado
+                        </div>
+                    ) : (
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="border-b text-slate-700">
+                                    <th className="py-3">Produto</th>
+                                    <th>Preço</th>
+                                    <th>Qtd</th>
+                                    <th>Subtotal</th>
+                                    <th className="text-right">Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {carrinho.map((item) => (
+                                    <tr key={item.id} className="border-b">
+                                        <td className="py-4">{item.nome}</td>
+                                        <td>R$ {Number(item.preco).toFixed(2)}</td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={item.quantidade}
+                                                onChange={(e) =>
+                                                    alterarQuantidade(item.id, Number(e.target.value))
+                                                }
+                                                className="w-20 border rounded-lg px-3 py-2"
+                                            />
+                                        </td>
+                                        <td>
+                                            R$ {(Number(item.preco) * item.quantidade).toFixed(2)}
+                                        </td>
+                                        <td className="text-right">
+                                            <button
+                                                onClick={() => removerProduto(item.id)}
+                                                className="text-red-600"
+                                            >
+                                                🗑
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+
+                    <div className="fixed left-6 right-[430px] bottom-6 bg-white border border-gray-200 rounded-xl p-4 shadow-lg">
+                        <label className="block text-sm font-medium mb-2">
+                            Buscar produto por código, código de barras ou nome
+                        </label>
+
+                        <input
+                            autoFocus
+                            value={busca}
+                            onChange={(e) => setBusca(e.target.value)}
+                            placeholder="Digite ou escaneie o código de barras..."
+                            className="w-full border rounded-xl px-4 py-4 text-lg outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+
+                        {produtosFiltrados.length > 0 && (
+                            <div className="mt-3 border rounded-xl overflow-hidden bg-white">
+                                {produtosFiltrados.map((produto) => (
+                                    <button
+                                        key={produto.id}
+                                        onClick={() => adicionarProduto(produto)}
+                                        className="w-full flex justify-between px-4 py-3 hover:bg-blue-50 text-left border-b last:border-none"
+                                    >
+                                        <span>
+                                            <strong>{produto.nome}</strong>
+                                            <br />
+                                            <small className="text-slate-500">
+                                                Código: {produto.id} | Estoque: {produto.estoque}
+                                            </small>
+                                        </span>
+
+                                        <span className="font-semibold">
+                                            R$ {Number(produto.preco).toFixed(2)}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                <aside className="bg-white border border-gray-200 rounded-xl p-6 h-fit">
+                    <h2 className="text-2xl font-bold mb-6">Resumo</h2>
+
+                    <div className="space-y-4 mb-6">
+                        <div className="flex justify-between">
+                            <span>Itens</span>
+                            <strong>{carrinho.length}</strong>
+                        </div>
+
+                        <div className="flex justify-between text-2xl border-t pt-4">
+                            <span>Total</span>
+                            <strong>R$ {total.toFixed(2)}</strong>
+                        </div>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">
+                            Tipo de venda
+                        </label>
+
+                        <select
+                            value={tipoVenda}
+                            onChange={(e) => setTipoVenda(e.target.value)}
+                            className="w-full border rounded-xl px-4 py-3"
+                        >
+                            <option value="avista">À vista</option>
+                            <option value="fiado">Fiado</option>
+                        </select>
+                    </div>
+
+                    {tipoVenda === "fiado" && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium mb-2">
+                                Cliente
+                            </label>
+
+                            <select
+                                value={clienteId}
+                                onChange={(e) => setClienteId(e.target.value)}
+                                className="w-full border rounded-xl px-4 py-3"
+                            >
+                                <option value="">Selecione um cliente</option>
+                                {clientes.map((cliente) => (
+                                    <option key={cliente.id} value={cliente.id}>
+                                        {cliente.nome}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    <button
+                        onClick={finalizarVenda}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl"
+                    >
+                        Finalizar Venda
+                    </button>
+                </aside>
+            </main>
+
+            {mostrarFiados && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+                    <div className="bg-white rounded-xl w-[800px] max-h-[80vh] overflow-auto p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold">Fiados dos Clientes</h2>
+
+                            <button
+                                onClick={() => setMostrarFiados(false)}
+                                className="text-slate-500 hover:text-slate-900"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {fiados.length === 0 ? (
+                            <p className="text-slate-500">Nenhum fiado registrado.</p>
+                        ) : (
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b">
+                                        <th className="py-3">Cliente</th>
+                                        <th>Data</th>
+                                        <th>Total</th>
+                                        <th>Itens</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {fiados.map((fiado) => (
+                                        <tr key={fiado.id} className="border-b">
+                                            <td className="py-3">{fiado.cliente}</td>
+                                            <td>{fiado.data}</td>
+                                            <td>R$ {fiado.total.toFixed(2)}</td>
+                                            <td>{fiado.itens.length}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
