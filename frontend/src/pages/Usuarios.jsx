@@ -161,7 +161,7 @@ export default function Usuarios() {
                     <tbody>
                         {usuariosFiltrados.map((usuario) => (
                             <tr key={usuario.id} className="border-b last:border-none">
-                                <td className="py-4">🛡️ {usuario.nome}</td>
+                                <td className="py-4"> {usuario.nome}</td>
                                 <td>{usuario.email}</td>
                                 <td>
                                     <span className="px-3 py-1 rounded-md text-sm bg-blue-100 text-blue-700">

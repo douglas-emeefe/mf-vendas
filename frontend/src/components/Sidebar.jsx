@@ -34,7 +34,7 @@ export default function Sidebar() {
 
                 {cadastrosAberto && (
                     <div className="ml-4 space-y-1">
-                        <Link to="/clientes" className="block px-4 py-3 rounded-xl bg-blue-50 text-blue-600">
+                        <Link to="/clientes" className="block px-4 py-3 rounded-xl hover:bg-blue-50">
                             Clientes
                         </Link>
 
