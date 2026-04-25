@@ -9,8 +9,8 @@ export default function PDV() {
     const [carrinho, setCarrinho] = useState([]);
     const [tipoVenda, setTipoVenda] = useState("avista");
     const [clienteId, setClienteId] = useState("");
-    const [mostrarFiados, setMostrarFiados] = useState(false);
-    const [fiados, setFiados] = useState([]);
+    const [mostrarCrediarios, setMostrarCrediarios] = useState(false);
+    const [crediarios, setCrediarios] = useState([]);
 
     async function carregarDados() {
         const produtosResponse = await api.get("/produtos");
@@ -87,15 +87,15 @@ export default function PDV() {
             return;
         }
 
-        if (tipoVenda === "fiado" && !clienteId) {
-            alert("Selecione um cliente para venda fiado.");
+        if (tipoVenda === "crediario" && !clienteId) {
+            alert("Selecione um cliente para venda no crediário.");
             return;
         }
 
-        if (tipoVenda === "fiado") {
+        if (tipoVenda === "crediario") {
             const cliente = clientes.find((c) => c.id === Number(clienteId));
 
-            const novoFiado = {
+            const novoCrediario = {
                 id: Date.now(),
                 cliente: cliente.nome,
                 total,
@@ -103,8 +103,8 @@ export default function PDV() {
                 data: new Date().toLocaleDateString("pt-BR"),
             };
 
-            setFiados([...fiados, novoFiado]);
-            alert("Venda registrada como fiado.");
+            setCrediarios([...crediarios, novoCrediario]);
+            alert("Venda registrada como crediário.");
         } else {
             alert("Venda finalizada com sucesso.");
         }
@@ -121,15 +121,15 @@ export default function PDV() {
                     <h1 className="text-3xl font-bold text-slate-900">
                         PDV - Ponto de Venda
                     </h1>
-                    <p className="text-slate-500">Venda rápida, à vista ou fiado</p>
+                    <p className="text-slate-500">Venda rápida, à vista ou crediário</p>
                 </div>
 
                 <div className="flex gap-3">
                     <button
-                        onClick={() => setMostrarFiados(true)}
+                        onClick={() => setMostrarCrediarios(true)}
                         className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-3 rounded-xl"
                     >
-                        Fiados
+                        Crediários
                     </button>
 
                     <Link
@@ -259,11 +259,11 @@ export default function PDV() {
                             className="w-full border rounded-xl px-4 py-3"
                         >
                             <option value="avista">À vista</option>
-                            <option value="fiado">Fiado</option>
+                            <option value="crediario">Crediário</option>
                         </select>
                     </div>
 
-                    {tipoVenda === "fiado" && (
+                    {tipoVenda === "crediario" && (
                         <div className="mb-4">
                             <label className="block text-sm font-medium mb-2">
                                 Cliente
@@ -293,22 +293,22 @@ export default function PDV() {
                 </aside>
             </main>
 
-            {mostrarFiados && (
+            {mostrarCrediarios && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
                     <div className="bg-white rounded-xl w-[800px] max-h-[80vh] overflow-auto p-6">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold">Fiados dos Clientes</h2>
+                            <h2 className="text-2xl font-bold">Crediários dos Clientes</h2>
 
                             <button
-                                onClick={() => setMostrarFiados(false)}
+                                onClick={() => setMostrarCrediarios(false)}
                                 className="text-slate-500 hover:text-slate-900"
                             >
                                 ✕
                             </button>
                         </div>
 
-                        {fiados.length === 0 ? (
-                            <p className="text-slate-500">Nenhum fiado registrado.</p>
+                        {crediarios.length === 0 ? (
+                            <p className="text-slate-500">Nenhum crediário registrado.</p>
                         ) : (
                             <table className="w-full text-left">
                                 <thead>
@@ -321,12 +321,12 @@ export default function PDV() {
                                 </thead>
 
                                 <tbody>
-                                    {fiados.map((fiado) => (
-                                        <tr key={fiado.id} className="border-b">
-                                            <td className="py-3">{fiado.cliente}</td>
-                                            <td>{fiado.data}</td>
-                                            <td>R$ {fiado.total.toFixed(2)}</td>
-                                            <td>{fiado.itens.length}</td>
+                                    {crediarios.map((crediario) => (
+                                        <tr key={crediario.id} className="border-b">
+                                            <td className="py-3">{crediario.cliente}</td>
+                                            <td>{crediario.data}</td>
+                                            <td>R$ {crediario.total.toFixed(2)}</td>
+                                            <td>{crediario.itens.length}</td>
                                         </tr>
                                     ))}
                                 </tbody>
