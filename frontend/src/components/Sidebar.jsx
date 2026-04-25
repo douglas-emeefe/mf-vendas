@@ -1,31 +1,57 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Sidebar() {
-    return (
-        <div className="w-64 h-screen bg-gray-100 p-4 border-r">
-            <h1 className="text-xl font-bold mb-6">Sistema de Vendas</h1>
+    const [cadastrosAberto, setCadastrosAberto] = useState(true);
 
-            <nav className="space-y-2">
-                <Link className="block p-2 rounded bg-blue-100 text-blue-600" to="/">
+    return (
+        <aside className="w-64 min-h-screen bg-white border-r border-gray-200">
+            <div className="h-[72px] flex items-center px-6 border-b">
+                <h1 className="text-xl font-bold text-slate-900">Sistema de Vendas</h1>
+            </div>
+
+            <nav className="p-4 space-y-2 text-slate-700">
+                <Link to="/" className="block px-4 py-3 rounded-xl hover:bg-blue-50">
                     Dashboard
                 </Link>
 
-                <Link className="block p-2 rounded hover:bg-gray-200" to="/pdv">
+                <Link to="/pdv" className="block px-4 py-3 rounded-xl hover:bg-blue-50">
                     PDV
                 </Link>
 
-                <Link className="block p-2 rounded hover:bg-gray-200" to="/relatorios">
+                <Link to="/relatorios" className="block px-4 py-3 rounded-xl hover:bg-blue-50">
                     Relatórios
                 </Link>
 
-                <Link className="block p-2 rounded hover:bg-gray-200" to="/produtos">
-                    Produtos
-                </Link>
+                <button
+                    type="button"
+                    onClick={() => setCadastrosAberto(!cadastrosAberto)}
+                    className="w-full flex justify-between items-center px-4 py-3 rounded-xl bg-blue-50 text-blue-600 font-medium"
+                >
+                    <span>Cadastros</span>
+                    <span>{cadastrosAberto ? "⌃" : "⌄"}</span>
+                </button>
 
-                <Link className="block p-2 rounded hover:bg-gray-200" to="/estoque">
+                {cadastrosAberto && (
+                    <div className="ml-4 space-y-1">
+                        <Link to="/clientes" className="block px-4 py-3 rounded-xl bg-blue-50 text-blue-600">
+                            Clientes
+                        </Link>
+
+                        <Link to="/produtos" className="block px-4 py-3 rounded-xl hover:bg-blue-50">
+                            Produtos
+                        </Link>
+
+                        <Link to="/usuarios" className="block px-4 py-3 rounded-xl hover:bg-blue-50">
+                            Usuários
+                        </Link>
+                    </div>
+                )}
+
+                <Link to="/estoque" className="block px-4 py-3 rounded-xl hover:bg-blue-50">
                     Estoque
                 </Link>
             </nav>
-        </div>
+        </aside>
     );
 }
