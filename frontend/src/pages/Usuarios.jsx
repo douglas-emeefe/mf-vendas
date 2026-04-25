@@ -1,33 +1,54 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "../layout/DashboardLayout";
+import { api } from "../services/api";
 
 export default function Usuarios() {
     const [mostrarFormulario, setMostrarFormulario] = useState(false);
+    const [usuarios, setUsuarios] = useState([]);
     const [busca, setBusca] = useState("");
 
-    const usuarios = [
-        {
-            id: 1,
-            nome: "Admin Sistema",
-            email: "admin@sistema.com",
-            perfil: "Administrador",
+    const [form, setForm] = useState({
+        nome: "",
+        email: "",
+        perfil: "Vendedor",
+        senha: "",
+    });
+
+    async function carregarUsuarios() {
+        const response = await api.get("/usuarios");
+        setUsuarios(response.data);
+    }
+
+    useEffect(() => {
+        carregarUsuarios();
+    }, []);
+
+    async function salvarUsuario(e) {
+        e.preventDefault();
+
+        await api.post("/usuarios", {
+            nome: form.nome,
+            email: form.email,
+            perfil: form.perfil,
+            senha: form.senha,
             status: "Ativo",
-        },
-        {
-            id: 2,
-            nome: "Carlos Gerente",
-            email: "carlos@sistema.com",
-            perfil: "Gerente",
-            status: "Ativo",
-        },
-        {
-            id: 3,
-            nome: "Ana Vendedora",
-            email: "ana@sistema.com",
+        });
+
+        setForm({
+            nome: "",
+            email: "",
             perfil: "Vendedor",
-            status: "Ativo",
-        },
-    ];
+            senha: "",
+        });
+
+        setMostrarFormulario(false);
+        carregarUsuarios();
+    }
+
+    async function deletarUsuario(id) {
+        await api.delete(`/usuarios/${id}`);
+        carregarUsuarios();
+    }
 
     const usuariosFiltrados = usuarios.filter((usuario) =>
         usuario.nome.toLowerCase().includes(busca.toLowerCase())
@@ -52,23 +73,35 @@ export default function Usuarios() {
                 <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
                     <h2 className="text-xl font-semibold mb-6">Novo Usuário</h2>
 
-                    <form className="grid grid-cols-2 gap-5">
+                    <form onSubmit={salvarUsuario} className="grid grid-cols-2 gap-5">
                         <div>
                             <label className="block text-sm font-medium mb-2">Nome *</label>
-                            <input className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" />
+                            <input
+                                required
+                                value={form.nome}
+                                onChange={(e) => setForm({ ...form, nome: e.target.value })}
+                                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                            />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-2">Email *</label>
                             <input
+                                required
                                 type="email"
+                                value={form.email}
+                                onChange={(e) => setForm({ ...form, email: e.target.value })}
                                 className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-2">Perfil *</label>
-                            <select className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+                            <select
+                                value={form.perfil}
+                                onChange={(e) => setForm({ ...form, perfil: e.target.value })}
+                                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                            >
                                 <option>Vendedor</option>
                                 <option>Gerente</option>
                                 <option>Administrador</option>
@@ -78,7 +111,10 @@ export default function Usuarios() {
                         <div>
                             <label className="block text-sm font-medium mb-2">Senha *</label>
                             <input
+                                required
                                 type="password"
+                                value={form.senha}
+                                onChange={(e) => setForm({ ...form, senha: e.target.value })}
                                 className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -137,9 +173,13 @@ export default function Usuarios() {
                                         {usuario.status}
                                     </span>
                                 </td>
-                                <td className="text-right space-x-4">
-                                    <button className="text-blue-600">✎</button>
-                                    <button className="text-red-600">🗑</button>
+                                <td className="text-right">
+                                    <button
+                                        onClick={() => deletarUsuario(usuario.id)}
+                                        className="text-red-600"
+                                    >
+                                        🗑
+                                    </button>
                                 </td>
                             </tr>
                         ))}
