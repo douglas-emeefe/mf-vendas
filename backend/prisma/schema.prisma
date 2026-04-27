@@ -16,13 +16,22 @@ model Usuario {
   status String @default("Ativo")
 }
 
+model Grupo {
+  id       Int       @id @default(autoincrement())
+  nome     String    @unique
+  produtos Produto[]
+}
+
 model Produto {
-  id        Int     @id @default(autoincrement())
-  nome      String
-  categoria String?
-  preco     Float
-  custo     Float?
-  estoque   Int
+  id           Int     @id @default(autoincrement())
+  nome         String
+  codigoBarras String?
+  preco        Float
+  custo        Float?
+  estoque      Int
+
+  grupoId Int?
+  grupo   Grupo? @relation(fields: [grupoId], references: [id])
 }
 
 model Cliente {

@@ -7,7 +7,14 @@ export const criarProduto = async (data) => {
 };
 
 export const listarProdutos = async () => {
-  return await prisma.produto.findMany();
+  return await prisma.produto.findMany({
+    include: {
+      grupo: true,
+    },
+    orderBy: {
+      id: "desc",
+    },
+  });
 };
 
 export const buscarProdutoPorId = async (id) => {
