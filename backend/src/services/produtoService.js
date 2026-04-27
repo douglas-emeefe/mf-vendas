@@ -33,7 +33,14 @@ export const buscarProdutoPorId = async (id) => {
 export const atualizarProduto = async (id, data) => {
   return await prisma.produto.update({
     where: { id: Number(id) },
-    data
+    data: {
+      nome: data.nome,
+      codigoBarras: data.codigoBarras,
+      preco: Number(data.preco),
+      custo: Number(data.custo),
+      estoque: Number(data.estoque),
+      grupoId: data.grupoId ? Number(data.grupoId) : null,
+    },
   });
 };
 

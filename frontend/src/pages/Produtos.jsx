@@ -10,6 +10,8 @@ export default function Produtos() {
     const [grupos, setGrupos] = useState([]);
     const [busca, setBusca] = useState("");
 
+    const [produtoEditandoId, setProdutoEditandoId] = useState(null);
+
     const [novoGrupo, setNovoGrupo] = useState("");
 
     const [form, setForm] = useState({
@@ -39,14 +41,20 @@ export default function Produtos() {
     async function salvarProduto(e) {
         e.preventDefault();
 
-        await api.post("/produtos", {
+        const dados = {
             nome: form.nome,
             codigoBarras: form.codigoBarras,
             grupoId: form.grupoId ? Number(form.grupoId) : null,
             preco: Number(form.preco),
             custo: Number(form.custo),
             estoque: Number(form.estoque),
-        });
+        };
+
+        if (produtoEditandoId) {
+            await api.put(`/produtos/${produtoEditandoId}`, dados);
+        } else {
+            await api.post("/produtos", dados);
+        }
 
         setForm({
             nome: "",
@@ -57,8 +65,24 @@ export default function Produtos() {
             estoque: 0,
         });
 
+        setProdutoEditandoId(null);
         setMostrarFormulario(false);
         carregarProdutos();
+    }
+
+    function editarProduto(produto) {
+        setProdutoEditandoId(produto.id);
+
+        setForm({
+            nome: produto.nome || "",
+            codigoBarras: produto.codigoBarras || "",
+            grupoId: produto.grupoId || "",
+            preco: produto.preco || 0,
+            custo: produto.custo || 0,
+            estoque: produto.estoque || 0,
+        });
+
+        setMostrarFormulario(true);
     }
 
     async function salvarGrupo(e) {
@@ -146,7 +170,9 @@ export default function Produtos() {
 
             {mostrarFormulario && (
                 <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-6">Novo Produto</h2>
+                    <h2 className="text-xl font-semibold mb-6">
+                        {produtoEditandoId ? "Editar Produto" : "Novo Produto"}
+                    </h2>
 
                     <form onSubmit={salvarProduto} className="grid grid-cols-2 gap-5">
                         <div>
@@ -235,7 +261,18 @@ export default function Produtos() {
 
                             <button
                                 type="button"
-                                onClick={() => setMostrarFormulario(false)}
+                                onClick={() => {
+                                    setMostrarFormulario(false);
+                                    setProdutoEditandoId(null);
+                                    setForm({
+                                        nome: "",
+                                        codigoBarras: "",
+                                        grupoId: "",
+                                        preco: 0,
+                                        custo: 0,
+                                        estoque: 0,
+                                    });
+                                }}
                                 className="bg-gray-300 hover:bg-gray-400 text-slate-800 font-semibold px-5 py-3 rounded-xl"
                             >
                                 Cancelar
@@ -252,44 +289,50 @@ export default function Produtos() {
                     onChange={(e) => setBusca(e.target.value)}
                     className="w-full border rounded-xl px-4 py-3 mb-6 outline-none focus:ring-2 focus:ring-blue-500"
                 />
-
-                <table className="w-full text-left">
-                    <thead>
-                        <tr className="border-b text-slate-700">
-                            <th className="py-3">Nome</th>
-                            <th>Cód. Barras</th>
-                            <th>Grupo</th>
-                            <th>Custo</th>
-                            <th>Preço</th>
-                            <th>Margem</th>
-                            <th>Estoque</th>
-                            <th className="text-right">Ações</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {produtosFiltrados.map((produto) => (
-                            <tr key={produto.id} className="border-b last:border-none">
-                                <td className="py-4">{produto.nome}</td>
-                                <td>{produto.codigoBarras || "-"}</td>
-                                <td>{produto.grupo?.nome || "-"}</td>
-                                <td>R$ {Number(produto.custo || 0).toFixed(2)}</td>
-                                <td>R$ {Number(produto.preco || 0).toFixed(2)}</td>
-                                <td className="text-green-600">{calcularMargem(produto)}</td>
-                                <td>{produto.estoque}</td>
-                                <td className="text-right space-x-4">
-                                    <button className="text-blue-600">✎</button>
-                                    <button
-                                        onClick={() => deletarProduto(produto.id)}
-                                        className="text-red-600"
-                                    >
-                                        🗑
-                                    </button>
-                                </td>
+                <div className="max-h-[430px] overflow-y-auto pr-2">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b text-slate-700">
+                                <th className="py-3">Nome</th>
+                                <th>Cód. Barras</th>
+                                <th>Grupo</th>
+                                <th>Custo</th>
+                                <th>Preço</th>
+                                <th>Margem</th>
+                                <th>Estoque</th>
+                                <th className="text-right">Ações</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody>
+                            {produtosFiltrados.map((produto) => (
+                                <tr key={produto.id} className="border-b last:border-none">
+                                    <td className="py-4">{produto.nome}</td>
+                                    <td>{produto.codigoBarras || "-"}</td>
+                                    <td>{produto.grupo?.nome || "-"}</td>
+                                    <td>R$ {Number(produto.custo || 0).toFixed(2)}</td>
+                                    <td>R$ {Number(produto.preco || 0).toFixed(2)}</td>
+                                    <td className="text-green-600">{calcularMargem(produto)}</td>
+                                    <td>{produto.estoque}</td>
+                                    <td className="text-right space-x-4">
+                                        <button
+                                            onClick={() => editarProduto(produto)}
+                                            className="text-blue-600"
+                                        >
+                                            ✎
+                                        </button>
+                                        <button
+                                            onClick={() => deletarProduto(produto.id)}
+                                            className="text-red-600"
+                                        >
+                                            🗑
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </DashboardLayout>
     );
