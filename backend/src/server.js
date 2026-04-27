@@ -12,7 +12,7 @@ app.use(express.json());
 app.use("/produtos", produtoRoutes);
 app.use("/clientes", clienteRoutes);
 app.use("/usuarios", usuarioRoutes);
-app.use("/grupo", grupoRoutes);
+app.use("/grupos", grupoRoutes);
 
 app.get("/", (req, res) => {
   res.send("API Sistema de Vendas rodando!");

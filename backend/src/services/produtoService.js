@@ -2,7 +2,14 @@ import prisma from "../database/prismaClient.js";
 
 export const criarProduto = async (data) => {
   return await prisma.produto.create({
-    data
+    data: {
+      nome: data.nome,
+      codigoBarras: data.codigoBarras,
+      preco: Number(data.preco),
+      custo: Number(data.custo),
+      estoque: Number(data.estoque),
+      grupoId: data.grupoId ? Number(data.grupoId) : null
+    }
   });
 };
 

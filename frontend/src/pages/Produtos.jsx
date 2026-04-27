@@ -4,12 +4,18 @@ import { api } from "../services/api";
 
 export default function Produtos() {
     const [mostrarFormulario, setMostrarFormulario] = useState(false);
+    const [mostrarGrupo, setMostrarGrupo] = useState(false);
+
     const [produtos, setProdutos] = useState([]);
+    const [grupos, setGrupos] = useState([]);
     const [busca, setBusca] = useState("");
+
+    const [novoGrupo, setNovoGrupo] = useState("");
 
     const [form, setForm] = useState({
         nome: "",
-        categoria: "",
+        codigoBarras: "",
+        grupoId: "",
         preco: 0,
         custo: 0,
         estoque: 0,
@@ -20,8 +26,14 @@ export default function Produtos() {
         setProdutos(response.data);
     }
 
+    async function carregarGrupos() {
+        const response = await api.get("/grupos");
+        setGrupos(response.data);
+    }
+
     useEffect(() => {
         carregarProdutos();
+        carregarGrupos();
     }, []);
 
     async function salvarProduto(e) {
@@ -29,7 +41,8 @@ export default function Produtos() {
 
         await api.post("/produtos", {
             nome: form.nome,
-            categoria: form.categoria,
+            codigoBarras: form.codigoBarras,
+            grupoId: form.grupoId ? Number(form.grupoId) : null,
             preco: Number(form.preco),
             custo: Number(form.custo),
             estoque: Number(form.estoque),
@@ -37,7 +50,8 @@ export default function Produtos() {
 
         setForm({
             nome: "",
-            categoria: "",
+            codigoBarras: "",
+            grupoId: "",
             preco: 0,
             custo: 0,
             estoque: 0,
@@ -45,6 +59,18 @@ export default function Produtos() {
 
         setMostrarFormulario(false);
         carregarProdutos();
+    }
+
+    async function salvarGrupo(e) {
+        e.preventDefault();
+
+        await api.post("/grupos", {
+            nome: novoGrupo,
+        });
+
+        setNovoGrupo("");
+        setMostrarGrupo(false);
+        carregarGrupos();
     }
 
     async function deletarProduto(id) {
@@ -70,13 +96,53 @@ export default function Produtos() {
                     Cadastro de Produtos
                 </h1>
 
-                <button
-                    onClick={() => setMostrarFormulario(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-3 rounded-xl"
-                >
-                    + Novo Produto
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setMostrarGrupo(true)}
+                        className="bg-slate-700 hover:bg-slate-800 text-white font-semibold px-5 py-3 rounded-xl"
+                    >
+                        + Novo Grupo
+                    </button>
+
+                    <button
+                        onClick={() => setMostrarFormulario(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-3 rounded-xl"
+                    >
+                        + Novo Produto
+                    </button>
+                </div>
             </div>
+
+            {mostrarGrupo && (
+                <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+                    <h2 className="text-xl font-semibold mb-6">Novo Grupo</h2>
+
+                    <form onSubmit={salvarGrupo} className="flex gap-3">
+                        <input
+                            required
+                            placeholder="Nome do grupo"
+                            value={novoGrupo}
+                            onChange={(e) => setNovoGrupo(e.target.value)}
+                            className="flex-1 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+
+                        <button
+                            type="submit"
+                            className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-3 rounded-xl"
+                        >
+                            Salvar
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setMostrarGrupo(false)}
+                            className="bg-gray-300 hover:bg-gray-400 text-slate-800 font-semibold px-5 py-3 rounded-xl"
+                        >
+                            Cancelar
+                        </button>
+                    </form>
+                </div>
+            )}
 
             {mostrarFormulario && (
                 <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
@@ -95,16 +161,32 @@ export default function Produtos() {
 
                         <div>
                             <label className="block text-sm font-medium mb-2">
-                                Categoria *
+                                Código de Barras
                             </label>
                             <input
-                                required
-                                value={form.categoria}
+                                value={form.codigoBarras}
                                 onChange={(e) =>
-                                    setForm({ ...form, categoria: e.target.value })
+                                    setForm({ ...form, codigoBarras: e.target.value })
                                 }
                                 className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-2">Grupo</label>
+                            <select
+                                // required
+                                value={form.grupoId}
+                                onChange={(e) => setForm({ ...form, grupoId: e.target.value })}
+                                className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Sem grupo</option>
+                                {grupos.map((grupo) => (
+                                    <option key={grupo.id} value={grupo.id}>
+                                        {grupo.nome}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>
@@ -175,7 +257,8 @@ export default function Produtos() {
                     <thead>
                         <tr className="border-b text-slate-700">
                             <th className="py-3">Nome</th>
-                            <th>Categoria</th>
+                            <th>Cód. Barras</th>
+                            <th>Grupo</th>
                             <th>Custo</th>
                             <th>Preço</th>
                             <th>Margem</th>
@@ -188,7 +271,8 @@ export default function Produtos() {
                         {produtosFiltrados.map((produto) => (
                             <tr key={produto.id} className="border-b last:border-none">
                                 <td className="py-4">{produto.nome}</td>
-                                <td>{produto.categoria || "-"}</td>
+                                <td>{produto.codigoBarras || "-"}</td>
+                                <td>{produto.grupo?.nome || "-"}</td>
                                 <td>R$ {Number(produto.custo || 0).toFixed(2)}</td>
                                 <td>R$ {Number(produto.preco || 0).toFixed(2)}</td>
                                 <td className="text-green-600">{calcularMargem(produto)}</td>
