@@ -146,45 +146,46 @@ export default function Usuarios() {
                     onChange={(e) => setBusca(e.target.value)}
                     className="w-full border rounded-xl px-4 py-3 mb-6 outline-none focus:ring-2 focus:ring-blue-500"
                 />
-
-                <table className="w-full text-left">
-                    <thead>
-                        <tr className="border-b text-slate-700">
-                            <th className="py-3">Nome</th>
-                            <th>Email</th>
-                            <th>Perfil</th>
-                            <th>Status</th>
-                            <th className="text-right">Ações</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {usuariosFiltrados.map((usuario) => (
-                            <tr key={usuario.id} className="border-b last:border-none">
-                                <td className="py-4"> {usuario.nome}</td>
-                                <td>{usuario.email}</td>
-                                <td>
-                                    <span className="px-3 py-1 rounded-md text-sm bg-blue-100 text-blue-700">
-                                        {usuario.perfil}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span className="px-3 py-1 rounded-md text-sm bg-green-100 text-green-700">
-                                        {usuario.status}
-                                    </span>
-                                </td>
-                                <td className="text-right">
-                                    <button
-                                        onClick={() => deletarUsuario(usuario.id)}
-                                        className="text-red-600"
-                                    >
-                                        🗑
-                                    </button>
-                                </td>
+                <div className="max-h-[430px] overflow-y-auto pr-2">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="border-b text-slate-700">
+                                <th className="py-3">Nome</th>
+                                <th>Email</th>
+                                <th>Perfil</th>
+                                <th>Status</th>
+                                <th className="text-right">Ações</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody>
+                            {usuariosFiltrados.map((usuario) => (
+                                <tr key={usuario.id} className="border-b last:border-none">
+                                    <td className="py-4"> {usuario.nome}</td>
+                                    <td>{usuario.email}</td>
+                                    <td>
+                                        <span className="px-3 py-1 rounded-md text-sm bg-blue-100 text-blue-700">
+                                            {usuario.perfil}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span className="px-3 py-1 rounded-md text-sm bg-green-100 text-green-700">
+                                            {usuario.status}
+                                        </span>
+                                    </td>
+                                    <td className="text-right">
+                                        <button
+                                            onClick={() => deletarUsuario(usuario.id)}
+                                            className="text-red-600"
+                                        >
+                                            🗑
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </DashboardLayout>
     );

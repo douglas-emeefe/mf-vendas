@@ -6,6 +6,7 @@ export default function Clientes() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [busca, setBusca] = useState("");
+  const [clienteEditandoId, setClienteEditandoId] = useState(null);
 
   const [form, setForm] = useState({
     nome: "",
@@ -13,6 +14,19 @@ export default function Clientes() {
     telefone: "",
     cpf: "",
   });
+
+  function editarCliente(cliente) {
+    setClienteEditandoId(cliente.id);
+
+    setForm({
+      nome: cliente.nome || "",
+      email: cliente.email || "",
+      telefone: cliente.telefone || "",
+      cpf: cliente.cpf || "",
+    });
+
+    setMostrarFormulario(true);
+  }
 
   async function carregarClientes() {
     const response = await api.get("/clientes");
@@ -26,12 +40,18 @@ export default function Clientes() {
   async function salvarCliente(e) {
     e.preventDefault();
 
-    await api.post("/clientes", {
+    const dados = {
       nome: form.nome,
       email: form.email,
       telefone: form.telefone,
       cpf: form.cpf,
-    });
+    };
+
+    if (clienteEditandoId) {
+      await api.put(`/clientes/${clienteEditandoId}`, dados);
+    } else {
+      await api.post("/clientes", dados);
+    }
 
     setForm({
       nome: "",
@@ -40,6 +60,7 @@ export default function Clientes() {
       cpf: "",
     });
 
+    setClienteEditandoId(null);
     setMostrarFormulario(false);
     carregarClientes();
   }
@@ -70,7 +91,9 @@ export default function Clientes() {
 
       {mostrarFormulario && (
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-6">Novo Cliente</h2>
+          <h2 className="text-xl font-semibold mb-6">
+            {clienteEditandoId ? "Editar Cliente" : "Novo Cliente"}
+          </h2>
 
           <form onSubmit={salvarCliente} className="grid grid-cols-2 gap-5">
             <div>
@@ -124,7 +147,16 @@ export default function Clientes() {
 
               <button
                 type="button"
-                onClick={() => setMostrarFormulario(false)}
+                onClick={() => {
+                  setMostrarFormulario(false);
+                  setClienteEditandoId(null);
+                  setForm({
+                    nome: "",
+                    email: "",
+                    telefone: "",
+                    cpf: "",
+                  });
+                }}
                 className="bg-gray-300 hover:bg-gray-400 text-slate-800 font-semibold px-5 py-3 rounded-xl"
               >
                 Cancelar
@@ -141,37 +173,45 @@ export default function Clientes() {
           onChange={(e) => setBusca(e.target.value)}
           className="w-full border rounded-xl px-4 py-3 mb-6 outline-none focus:ring-2 focus:ring-blue-500"
         />
-
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b text-slate-700">
-              <th className="py-3">Nome</th>
-              <th>Email</th>
-              <th>Telefone</th>
-              <th>CPF</th>
-              <th className="text-right">Ações</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {clientesFiltrados.map((cliente) => (
-              <tr key={cliente.id} className="border-b last:border-none">
-                <td className="py-4">{cliente.nome}</td>
-                <td>{cliente.email}</td>
-                <td>{cliente.telefone || "-"}</td>
-                <td>{cliente.cpf || "-"}</td>
-                <td className="text-right">
-                  <button
-                    onClick={() => deletarCliente(cliente.id)}
-                    className="text-red-600"
-                  >
-                    🗑
-                  </button>
-                </td>
+        <div className="max-h-[430px] overflow-y-auto pr-2">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b text-slate-700">
+                <th className="py-3">Nome</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>CPF</th>
+                <th className="text-right">Ações</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {clientesFiltrados.map((cliente) => (
+                <tr key={cliente.id} className="border-b last:border-none">
+                  <td className="py-4">{cliente.nome}</td>
+                  <td>{cliente.email}</td>
+                  <td>{cliente.telefone || "-"}</td>
+                  <td>{cliente.cpf || "-"}</td>
+                  <td className="text-right space-x-4">
+                    <button
+                      onClick={() => editarCliente(cliente)}
+                      className="text-blue-600"
+                    >
+                      ✎
+                    </button>
+
+                    <button
+                      onClick={() => deletarCliente(cliente.id)}
+                      className="text-red-600"
+                    >
+                      🗑
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -18,6 +18,19 @@ export const listar = async (req, res) => {
     }
 };
 
+export const atualizar = async (req, res) => {
+    try {
+        const cliente = await clienteService.atualizarCliente(
+            req.params.id,
+            req.body
+        );
+
+        return res.json(cliente);
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
 export const deletar = async (req, res) => {
     try {
         await clienteService.deletarCliente(req.params.id);
